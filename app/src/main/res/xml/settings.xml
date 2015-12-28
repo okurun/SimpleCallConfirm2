@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <SwitchPreference
+        android:title="@string/enabled_call_confirm"
+        android:summaryOn="@string/enabled"
+        android:summaryOff="@string/disabled"
+        android:key="enabled"/>
+    <SwitchPreference
+        android:title="@string/fingerprint_confirm"
+        android:summaryOn="@string/on"
+        android:summaryOff="@string/off"
+        android:key="fingerprint_confirm"/>
+    <ListPreference
+        android:title="@string/theme"
+        android:key="theme"
+        android:dialogTitle="@string/theme"/>
+</PreferenceScreen>
