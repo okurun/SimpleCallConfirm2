@@ -47,7 +47,7 @@ public class ConfirmActivity extends Activity {
         switch (requestCode) {
             case REQUEST_CODE_REQUEST_CALL_PERMISSION:
                 if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                    MainSettingsFragment.setEnabled(this, false);
+                    MainSettingsFragment.setCallConfirmEnabled(this, false);
                     Toast.makeText(this, R.string.disable_confirm_message, Toast.LENGTH_LONG).show();
                     Toast.makeText(this, R.string.please_recall, Toast.LENGTH_LONG).show();
                     return;
@@ -63,6 +63,7 @@ public class ConfirmActivity extends Activity {
             FingerprintManager fingerprintManager =
                     (FingerprintManager)getSystemService(Activity.FINGERPRINT_SERVICE);
             if (fingerprintManager.hasEnrolledFingerprints()) {
+                // TODO ここが動作しない
                 fingerprintManager.authenticate(null, null, 0, new FingerprintManager.AuthenticationCallback() {
                     @Override
                     public void onAuthenticationError(int errorCode, CharSequence errString) {

@@ -8,6 +8,7 @@ import android.content.pm.PackageManager;
 import android.hardware.fingerprint.FingerprintManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -22,19 +23,21 @@ import android.widget.Toast;
 public class MainSettingsFragment extends PreferenceFragment {
     private static final int REQUEST_CODE_REQUEST_PERMISSIONS = 1;
     private static final int REQUEST_CODE_REQUEST_FINGERPRINT_PERMISSIONS = 2;
+    private static final int REQUEST_CODE_REQUEST_BLUETOOTH_PERMISSIONS = 3;
 
-    private static final String PREF_ENABLED = "enabled";
+    private static final String PREF_CALL_CONFIRM_ENABLED = "call_confirm_enabled";
     private static final String PREF_FINGERPRINT_CONFIRM = "fingerprint_confirm";
+    private static final String PREF_BLUETOOTH_ENABLED = "bluetooth_enabled";
     private static final String PREF_THEME = "theme";
 
-    public static boolean isEnabled(Context context) {
+    public static boolean isCallConfirmEnabled(Context context) {
         return PreferenceManager.getDefaultSharedPreferences(context)
-                .getBoolean(PREF_ENABLED, true);
+                .getBoolean(PREF_CALL_CONFIRM_ENABLED, true);
     }
 
-    public static void setEnabled(Context context, boolean enabled) {
+    public static void setCallConfirmEnabled(Context context, boolean enabled) {
         PreferenceManager.getDefaultSharedPreferences(context).edit()
-                .putBoolean(PREF_ENABLED, enabled).commit();
+                .putBoolean(PREF_CALL_CONFIRM_ENABLED, enabled).commit();
     }
 
     public static boolean isFingerprintConfirm(Context context) {
@@ -47,14 +50,24 @@ public class MainSettingsFragment extends PreferenceFragment {
                 .putBoolean(PREF_FINGERPRINT_CONFIRM, enabled).commit();
     }
 
+    public static boolean isBluetoothEnabled(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getBoolean(PREF_BLUETOOTH_ENABLED, false);
+    }
+
+    public static void setBluetoothEnabled(Context context, boolean enabled) {
+        PreferenceManager.getDefaultSharedPreferences(context).edit()
+                .putBoolean(PREF_BLUETOOTH_ENABLED, enabled).commit();
+    }
+
     public static int getTheme(Context context) {
         return Integer.valueOf(PreferenceManager.getDefaultSharedPreferences(context)
-                .getString(PREF_THEME, String.valueOf(android.R.style.Theme_Holo_Dialog)));
+                .getString(PREF_THEME, String.valueOf(android.R.style.Theme_DeviceDefault)));
     }
 
     public static String getThemeStr(Context context) {
         return PreferenceManager.getDefaultSharedPreferences(context)
-                .getString(PREF_THEME, String.valueOf(android.R.style.Theme_Holo_Dialog));
+                .getString(PREF_THEME, String.valueOf(getTheme(context)));
     }
 
     public static void setThme(Context context, String theme) {
@@ -63,23 +76,23 @@ public class MainSettingsFragment extends PreferenceFragment {
     }
 
     private static final CharSequence[] THEME_ENTRIES = new CharSequence[] {
-            "Holo",
-            "Holo Light",
             "DeviceDefault",
             "DeviceDefault Light",
             "Material",
             "Material Light",
-            "No Theme",
+            "Holo",
+            "Holo Light",
+            "Default",
     };
 
     private static final CharSequence[] THEME_ENTRY_VALUES = new CharSequence[] {
-            String.valueOf(android.R.style.Theme_Holo_Dialog),
-            String.valueOf(android.R.style.Theme_Holo_Light_Dialog),
-            String.valueOf(android.R.style.Theme_DeviceDefault_Dialog),
-            String.valueOf(android.R.style.Theme_DeviceDefault_Light_Dialog),
-            String.valueOf(android.R.style.Theme_Material_Dialog),
-            String.valueOf(android.R.style.Theme_Material_Light_Dialog),
-            String.valueOf(android.R.style.Theme_Dialog),
+            String.valueOf(android.R.style.Theme_DeviceDefault),
+            String.valueOf(android.R.style.Theme_DeviceDefault_Light),
+            String.valueOf(android.R.style.Theme_Material),
+            String.valueOf(android.R.style.Theme_Material_Light),
+            String.valueOf(android.R.style.Theme_Holo),
+            String.valueOf(android.R.style.Theme_Holo_Light),
+            String.valueOf(android.R.style.Theme),
     };
 
     private static void setThemePrefSummary(Preference preference, String theme) {
@@ -104,17 +117,18 @@ public class MainSettingsFragment extends PreferenceFragment {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.settings);
 
-        initEnabledPreference();
+        initCallConfirmEnabledPreference();
         initFingerprintConfirmPreference();
+        initBluetoothEnabledPreference();
         initThemePreference();
     }
 
-    private void initEnabledPreference() {
+    private void initCallConfirmEnabledPreference() {
         final Context context = getActivity().getApplicationContext();
 
-        SwitchPreference enabledPref = (SwitchPreference)findPreference(PREF_ENABLED);
-        enabledPref.setChecked(isEnabled(context));
-        enabledPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+        SwitchPreference callConfirmEnabledPref = (SwitchPreference)findPreference(PREF_CALL_CONFIRM_ENABLED);
+        callConfirmEnabledPref.setChecked(isCallConfirmEnabled(context));
+        callConfirmEnabledPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
                 if ((boolean) newValue) {
@@ -137,7 +151,7 @@ public class MainSettingsFragment extends PreferenceFragment {
     private void initFingerprintConfirmPreference() {
         final Context context = getActivity().getApplicationContext();
 
-        SwitchPreference fingerprintConfirmPref =
+        final SwitchPreference fingerprintConfirmPref =
                 (SwitchPreference)findPreference(PREF_FINGERPRINT_CONFIRM);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             final FingerprintManager fingerprintManager =
@@ -159,6 +173,27 @@ public class MainSettingsFragment extends PreferenceFragment {
                                 Toast.makeText(context, R.string.not_has_enrolled_fingerprints, Toast.LENGTH_LONG).show();
                                 return false;
                             }
+                        } else {
+//                            FingerprintManager fingerprintManager =
+//                                    (FingerprintManager)context.getSystemService(Activity.FINGERPRINT_SERVICE);
+//                            // TODO ここが動作しない
+//                            fingerprintManager.authenticate(null, null, 0, new FingerprintManager.AuthenticationCallback() {
+//                                @Override
+//                                public void onAuthenticationError(int errorCode, CharSequence errString) {
+//                                }
+//
+//                                @Override
+//                                public void onAuthenticationFailed() {
+//                                }
+//
+//                                @Override
+//                                public void onAuthenticationSucceeded(FingerprintManager.AuthenticationResult result) {
+//                                    setFingerprintConfirm(context, false);
+//                                    fingerprintConfirmPref.setEnabled(false);
+//                                }
+//                            }, new Handler());
+//
+//                            return false;
                         }
                         return true;
                     }
@@ -169,6 +204,29 @@ public class MainSettingsFragment extends PreferenceFragment {
         } else {
             fingerprintConfirmPref.setEnabled(false);
         }
+    }
+
+    private void initBluetoothEnabledPreference() {
+        final Context context = getActivity().getApplicationContext();
+
+        SwitchPreference bluetoothEnabledPref = (SwitchPreference)findPreference(PREF_BLUETOOTH_ENABLED);
+        bluetoothEnabledPref.setChecked(isBluetoothEnabled(context));
+        bluetoothEnabledPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                if ((boolean) newValue) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        if (context.checkSelfPermission(Manifest.permission.BLUETOOTH)
+                                != PackageManager.PERMISSION_GRANTED) {
+                            String[] permissions = new String[]{Manifest.permission.BLUETOOTH};
+                            requestPermissions(permissions, REQUEST_CODE_REQUEST_BLUETOOTH_PERMISSIONS);
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+        });
     }
 
     private void initThemePreference() {
@@ -197,13 +255,14 @@ public class MainSettingsFragment extends PreferenceFragment {
             case REQUEST_CODE_REQUEST_PERMISSIONS:
                 for (int i = 0; i < 2; i++) {
                     if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
-                        setEnabled(context, false);
+                        setCallConfirmEnabled(context, false);
                         Toast.makeText(context, R.string.disable_confirm_message, Toast.LENGTH_LONG).show();
                         return;
                     }
                 }
-                setEnabled(context, true);
-                CheckBoxPreference enabledPref = ((CheckBoxPreference) findPreference(PREF_ENABLED));
+                setCallConfirmEnabled(context, true);
+                SwitchPreference enabledPref =
+                        ((SwitchPreference)findPreference(PREF_CALL_CONFIRM_ENABLED));
                 enabledPref.setChecked(true);
                 break;
             case REQUEST_CODE_REQUEST_FINGERPRINT_PERMISSIONS:
@@ -213,9 +272,20 @@ public class MainSettingsFragment extends PreferenceFragment {
                     return;
                 }
                 setFingerprintConfirm(context, true);
-                CheckBoxPreference fingerprintConfirmPref =
-                        ((CheckBoxPreference)findPreference(PREF_FINGERPRINT_CONFIRM));
+                SwitchPreference fingerprintConfirmPref =
+                        ((SwitchPreference)findPreference(PREF_FINGERPRINT_CONFIRM));
                 fingerprintConfirmPref.setChecked(true);
+                break;
+            case REQUEST_CODE_REQUEST_BLUETOOTH_PERMISSIONS:
+                if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                    setBluetoothEnabled(context, false);
+                    Toast.makeText(context, R.string.disable_bluetooth_message, Toast.LENGTH_LONG).show();
+                    return;
+                }
+                setBluetoothEnabled(context, true);
+                SwitchPreference bluetoothEnabledPref =
+                        ((SwitchPreference)findPreference(PREF_BLUETOOTH_ENABLED));
+                bluetoothEnabledPref.setChecked(true);
                 break;
         }
     }

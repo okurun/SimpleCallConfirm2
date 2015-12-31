@@ -5,14 +5,23 @@
         android:title="@string/enabled_call_confirm"
         android:summaryOn="@string/enabled"
         android:summaryOff="@string/disabled"
-        android:key="enabled"/>
-    <SwitchPreference
-        android:title="@string/fingerprint_confirm"
-        android:summaryOn="@string/on"
-        android:summaryOff="@string/off"
-        android:key="fingerprint_confirm"/>
-    <ListPreference
-        android:title="@string/theme"
-        android:key="theme"
-        android:dialogTitle="@string/theme"/>
+        android:key="call_confirm_enabled"/>
+    <PreferenceCategory
+        android:dependency="call_confirm_enabled"
+        android:title="@string/main_category_title">
+        <ListPreference
+            android:title="@string/theme"
+            android:key="theme"
+            android:dialogTitle="@string/theme"/>
+        <SwitchPreference
+            android:title="@string/fingerprint_confirm"
+            android:summaryOn="@string/on"
+            android:summaryOff="@string/off"
+            android:key="fingerprint_confirm"/>
+        <SwitchPreference
+            android:title="@string/enabled_bluetooth"
+            android:summaryOn="@string/on"
+            android:summaryOff="@string/off"
+            android:key="bluetooth_enabled"/>
+    </PreferenceCategory>
 </PreferenceScreen>

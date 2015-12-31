@@ -21,7 +21,7 @@ public class OutgoingCallsReceiver extends BroadcastReceiver {
             return;
         }
 
-        if (!MainSettingsFragment.isEnabled(context)) {
+        if (!MainSettingsFragment.isCallConfirmEnabled(context)) {
             return;
         }
 

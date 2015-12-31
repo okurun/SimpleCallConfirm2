@@ -36,7 +36,7 @@ public class MainActivity extends Activity {
             case REQUEST_CODE_REQUEST_PERMISSIONS:
                 for (int i = 0; i < 2; i++) {
                     if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
-                        MainSettingsFragment.setEnabled(this, false);
+                        MainSettingsFragment.setCallConfirmEnabled(this, false);
                         Toast.makeText(this, R.string.disable_confirm_message, Toast.LENGTH_LONG).show();
                     }
                 }
