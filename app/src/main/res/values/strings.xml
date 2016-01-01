@@ -4,9 +4,16 @@
 
     <string name="enabled_call_confirm">発信確認の有効/無効</string>
     <string name="main_category_title">詳細設定</string>
-    <string name="fingerprint_confirm">指紋認証による発信確認</string>
-    <string name="enabled_bluetooth">Bluetooth</string>
     <string name="theme">テーマ</string>
+    <string name="fingerprint_confirm">指紋認証による発信確認</string>
+    <string name="fingerprint_confirm_summary">発信確認に指紋認証を利用します</string>
+    <string name="enabled_bluetooth">Bluetooth</string>
+    <string name="enabled_bluetooth_summary">対象Bluetooth機器を接続している間は発信確認を無効にします</string>
+    <string name="add_bluetooth_device">対象Bluetooth機器の追加</string>
+    <string name="delete_bluetooth_device">対象Bluetooth機器の削除</string>
+
+    <string name="add_bluetooth_device_dialog_title">対象Bluetooth機器を選択してください</string>
+    <string name="bluetooth_device_not_found">対象のBluetooth機器が見つかりませんでした</string>
 
     <string name="enabled">有効</string>
     <string name="disabled">無効</string>
@@ -19,4 +26,7 @@
     <string name="not_has_enrolled_fingerprints">指紋が登録されていません</string>
     <string name="disable_fingerprint_confirm_message">権限がないため、指紋認証による発信確認をOFFにしました</string>
     <string name="disable_bluetooth_message">権限がないため、BluetoothをOFFにしました</string>
+
+<!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

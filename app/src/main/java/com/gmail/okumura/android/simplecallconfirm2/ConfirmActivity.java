@@ -7,21 +7,23 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.hardware.fingerprint.FingerprintManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.view.ContextThemeWrapper;
 import android.view.Window;
 import android.widget.Toast;
 
+
 public class ConfirmActivity extends Activity {
-    private static final String SCHEME_TEL = "tel:";
     private static final int REQUEST_CODE_REQUEST_CALL_PERMISSION = 1;
 
     private String mNumber = null;
 
+    /**
+     * onCreate
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,12 +38,21 @@ public class ConfirmActivity extends Activity {
         }
     }
 
+    /**
+     * onDestroy
+     */
     @Override
     protected void onDestroy() {
         super.onDestroy();
         mNumber = null;
     }
 
+    /**
+     * onRequestPermissionsResult
+     * @param requestCode
+     * @param permissions
+     * @param grantResults
+     */
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         switch (requestCode) {
@@ -57,36 +68,43 @@ public class ConfirmActivity extends Activity {
         }
     }
 
+    /**
+     * 指紋認証ダイアログを表示します
+     */
     @TargetApi(Build.VERSION_CODES.M)
     private void showFingerprintConfirmDialog() {
-        if (checkSelfPermission(Manifest.permission.USE_FINGERPRINT) == PackageManager.PERMISSION_GRANTED) {
-            FingerprintManager fingerprintManager =
-                    (FingerprintManager)getSystemService(Activity.FINGERPRINT_SERVICE);
-            if (fingerprintManager.hasEnrolledFingerprints()) {
+        if (MainSettingsFragment.hasFingerprintPermissions(this)) {
+            if (MainSettingsFragment.hasEnrolledFingerprints(this)) {
                 // TODO ここが動作しない
-                fingerprintManager.authenticate(null, null, 0, new FingerprintManager.AuthenticationCallback() {
-                    @Override
-                    public void onAuthenticationError(int errorCode, CharSequence errString) {
-                    }
+//                fingerprintManager.authenticate(null, null, 0, new FingerprintManager.AuthenticationCallback() {
+//                    @Override
+//                    public void onAuthenticationError(int errorCode, CharSequence errString) {
+//                    }
+//
+//                    @Override
+//                    public void onAuthenticationFailed() {
+//                    }
+//
+//                    @Override
+//                    public void onAuthenticationSucceeded(FingerprintManager.AuthenticationResult result) {
+//                        call();
+//                    }
+//                }, new Handler());
 
-                    @Override
-                    public void onAuthenticationFailed() {
-                    }
-
-                    @Override
-                    public void onAuthenticationSucceeded(FingerprintManager.AuthenticationResult result) {
-                        call();
-                    }
-                }, new Handler());
-            } else {
-                MainSettingsFragment.setFingerprintConfirm(this, false);
-                Toast.makeText(this, R.string.not_has_enrolled_fingerprints, Toast.LENGTH_LONG).show();
+                return;
             }
         }
+
+        // 指紋認証が不可能な状態なので指紋認証を無効にします
+        MainSettingsFragment.setFingerprintConfirm(this, false);
+        Toast.makeText(this, R.string.not_has_enrolled_fingerprints, Toast.LENGTH_LONG).show();
     }
 
+    /**
+     * 通常の発信確認ダイアログを表示する
+     */
     private void showConfirmDialog() {
-        int style = MainSettingsFragment.getTheme(this);
+        int style = MainSettingsFragment.getIntTheme(this);
         (new AlertDialog.Builder(new ContextThemeWrapper(this, style)))
                 .setTitle(mNumber)
                 .setCancelable(true)
@@ -113,21 +131,27 @@ public class ConfirmActivity extends Activity {
                 .show();
     }
 
+    /**
+     * 電話を発信します
+     */
     private void call() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (checkSelfPermission(Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[]{Manifest.permission.CALL_PHONE}, REQUEST_CODE_REQUEST_CALL_PERMISSION);
-                return;
-            }
+        // 電話の発信権限があるか確認
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && checkSelfPermission(Manifest.permission.PROCESS_OUTGOING_CALLS)
+                        != PackageManager.PERMISSION_GRANTED) {
+            // 電話の発信権限をリクエストする
+            MainSettingsFragment.requestCallConfirmPermissions(this, REQUEST_CODE_REQUEST_CALL_PERMISSION);
+            return;
         }
 
+        // 発信先がなければ何もしない
         if (null == mNumber) {
             return;
         }
 
         OutgoingCallsReceiver.setIgnoreConfirm(true);
 
-        Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse(SCHEME_TEL + mNumber));
+        Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse(OutgoingCallsReceiver.SCHEME_TEL + mNumber));
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
         finish();

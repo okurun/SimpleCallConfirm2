@@ -15,13 +15,22 @@
             android:dialogTitle="@string/theme"/>
         <SwitchPreference
             android:title="@string/fingerprint_confirm"
-            android:summaryOn="@string/on"
+            android:summaryOn="@string/fingerprint_confirm_summary"
             android:summaryOff="@string/off"
             android:key="fingerprint_confirm"/>
         <SwitchPreference
             android:title="@string/enabled_bluetooth"
-            android:summaryOn="@string/on"
+            android:summaryOn="@string/enabled_bluetooth_summary"
             android:summaryOff="@string/off"
             android:key="bluetooth_enabled"/>
+            android:dependency="bluetooth_enabled">
+        <Preference
+            android:title="@string/add_bluetooth_device"
+            android:key="add_bluetooth_device"
+            android:dependency="bluetooth_enabled"/>
+        <Preference
+            android:title="@string/delete_bluetooth_device"
+            android:key="delete_bluetooth_device"
+            android:dependency="bluetooth_enabled"/>
     </PreferenceCategory>
 </PreferenceScreen>
