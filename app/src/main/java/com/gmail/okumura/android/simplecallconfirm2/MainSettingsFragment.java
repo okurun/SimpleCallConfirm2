@@ -23,7 +23,7 @@ import java.util.Set;
 /**
  * Created by naoki on 15/12/27.
  */
-public class MainSettingsFragment extends PreferenceFragment {
+public class MainSettingsFragment extends PreferenceFragment implements RefreshDisplayInterface {
     private static final int REQUEST_CODE_REQUEST_PERMISSIONS = 1;
     private static final int REQUEST_CODE_REQUEST_FINGERPRINT_PERMISSIONS = 2;
     private static final int REQUEST_CODE_REQUEST_BLUETOOTH_PERMISSIONS = 3;
@@ -33,7 +33,11 @@ public class MainSettingsFragment extends PreferenceFragment {
     private static final String PREF_FINGERPRINT_CONFIRM = "fingerprint_confirm";
     private static final String PREF_BLUETOOTH_ENABLED = "bluetooth_enabled";
     private static final String PREF_ADD_BLUETOOTH_DEVICE = "add_bluetooth_device";
+    private static final String PREF_DELETE_BLUETOOTH_DEVICE = "delete_bluetooth_device";
     private static final String PREF_BLUETOOTH_DEVICES = "bluetooth_devices";
+
+    private static final String DIALOG_ADD_BLUETOOTH_DEVICE_LIST = "add_bluetooth_device_list";
+    private static final String DIALOG_DELETE_BLUETOOTH_DEVICE_LIST = "delete_bluetooth_device_list";
 
     private static final CharSequence[] THEME_ENTRIES = new CharSequence[] {
             "DeviceDefault",
@@ -99,6 +103,20 @@ public class MainSettingsFragment extends PreferenceFragment {
         addressSet.add(address);
         PreferenceManager.getDefaultSharedPreferences(context).edit()
                 .putStringSet(PREF_BLUETOOTH_DEVICES, addressSet).commit();
+    }
+
+    public static int deleteBluetoothDevice(Context context, String address) {
+        Set<String> addressSet = getBluetoothDevices(context);
+        for (String addr : addressSet) {
+            if (addr.equals(address)) {
+                addressSet.remove(addr);
+                break;
+            }
+        }
+        PreferenceManager.getDefaultSharedPreferences(context).edit()
+                .putStringSet(PREF_BLUETOOTH_DEVICES, addressSet).commit();
+
+        return addressSet.size();
     }
 
     public static Set<String> getBluetoothDevices(Context context) {
@@ -263,6 +281,40 @@ public class MainSettingsFragment extends PreferenceFragment {
         initFingerprintConfirmPreference();
         initBluetoothEnabledPreference();
         initAddBluetoothDevicePreference();
+        initDeleteBluetoothDevicePreference();
+    }
+
+    /**
+     * onResume
+     */
+    @Override
+    public void onResume() {
+        super.onResume();
+        refreshDisplay();
+    }
+
+    /**
+     * 画面をリフレッシュします
+     */
+    @Override
+    public void refreshDisplay() {
+        Context context = getActivity().getApplicationContext();
+
+        SwitchPreference callConfirmEnabledPref =
+                (SwitchPreference)findPreference(PREF_CALL_CONFIRM_ENABLED);
+        callConfirmEnabledPref.setChecked(isCallConfirmEnabled(context));
+
+        ListPreference themePref = (ListPreference)findPreference(PREF_THEME);
+        String theme = getTheme(context);
+        themePref.setValue(theme);
+        setThemePreferenceSummary(themePref, theme);
+
+        SwitchPreference fingerprintConfirmPref =
+                (SwitchPreference)findPreference(PREF_FINGERPRINT_CONFIRM);
+        fingerprintConfirmPref.setChecked(isFingerprintConfirm(context));
+
+        SwitchPreference bluetoothEnabledPref = (SwitchPreference)findPreference(PREF_BLUETOOTH_ENABLED);
+        bluetoothEnabledPref.setChecked(isBluetoothEnabled(context));
     }
 
     /**
@@ -312,6 +364,12 @@ public class MainSettingsFragment extends PreferenceFragment {
                 SwitchPreference bluetoothEnabledPref =
                         ((SwitchPreference)findPreference(PREF_BLUETOOTH_ENABLED));
                 bluetoothEnabledPref.setChecked(true);
+
+                if (MainSettingsFragment.getBluetoothDevices(context).size() < 1) {
+                    DialogFragment dialogFragment = new AddBluetoothDeviceListFragment();
+                    dialogFragment.show(getFragmentManager(), DIALOG_ADD_BLUETOOTH_DEVICE_LIST);
+                }
+
                 break;
         }
     }
@@ -323,7 +381,6 @@ public class MainSettingsFragment extends PreferenceFragment {
         SwitchPreference callConfirmEnabledPref =
                 (SwitchPreference)findPreference(PREF_CALL_CONFIRM_ENABLED);
 
-        callConfirmEnabledPref.setChecked(isCallConfirmEnabled(context));
         callConfirmEnabledPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
@@ -344,14 +401,9 @@ public class MainSettingsFragment extends PreferenceFragment {
      * テーマ設定を初期化する
      */
     private void initThemePreference() {
-        Context context = getActivity().getApplicationContext();
-        String theme = getTheme(context);
-
         ListPreference themePref = (ListPreference)findPreference(PREF_THEME);
         themePref.setEntries(THEME_ENTRIES);
         themePref.setEntryValues(THEME_ENTRY_VALUES);
-        themePref.setValue(theme);
-        setThemePreferenceSummary(themePref, theme);
         themePref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
@@ -369,8 +421,6 @@ public class MainSettingsFragment extends PreferenceFragment {
         final Context context = getActivity().getApplicationContext();
         final SwitchPreference fingerprintConfirmPref =
                 (SwitchPreference)findPreference(PREF_FINGERPRINT_CONFIRM);
-
-        fingerprintConfirmPref.setChecked(isFingerprintConfirm(context));
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             // 端末が指紋認証機能をもっているかチェック
@@ -438,8 +488,6 @@ public class MainSettingsFragment extends PreferenceFragment {
         final Context context = getActivity().getApplicationContext();
         SwitchPreference bluetoothEnabledPref = (SwitchPreference)findPreference(PREF_BLUETOOTH_ENABLED);
 
-        bluetoothEnabledPref.setChecked(isBluetoothEnabled(context));
-
         BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBluetoothAdapter == null) {
             // 端末がBluetoothをサポートしていなければ無効にする
@@ -459,6 +507,11 @@ public class MainSettingsFragment extends PreferenceFragment {
                             return false;
                         }
                     }
+
+                    if (MainSettingsFragment.getBluetoothDevices(context).size() < 1) {
+                        DialogFragment dialogFragment = new AddBluetoothDeviceListFragment();
+                        dialogFragment.show(getFragmentManager(), DIALOG_ADD_BLUETOOTH_DEVICE_LIST);
+                    }
                 }
                 return true;
             }
@@ -471,7 +524,19 @@ public class MainSettingsFragment extends PreferenceFragment {
             @Override
             public boolean onPreferenceClick(Preference preference) {
                 DialogFragment dialogFragment = new AddBluetoothDeviceListFragment();
-                dialogFragment.show(getFragmentManager(), "add_bluetooth_device_list");
+                dialogFragment.show(getFragmentManager(), DIALOG_ADD_BLUETOOTH_DEVICE_LIST);
+                return true;
+            }
+        });
+    }
+
+    private void initDeleteBluetoothDevicePreference() {
+        Preference deleteBluetoothDevicePref = findPreference(PREF_DELETE_BLUETOOTH_DEVICE);
+        deleteBluetoothDevicePref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                DialogFragment dialogFragment = new DeleteBluetoothDeviceListFragment();
+                dialogFragment.show(getFragmentManager(), DIALOG_DELETE_BLUETOOTH_DEVICE_LIST);
                 return true;
             }
         });
