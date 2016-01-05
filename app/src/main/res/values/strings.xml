@@ -12,7 +12,7 @@
     <string name="enabled_bluetooth_summary">対象Bluetooth機器を接続している間は発信確認を無効にします</string>
     <string name="bluetooth_not_supported">この端末はBluetoothをサポートしていません</string>
     <string name="add_bluetooth_device">対象Bluetooth機器の追加</string>
-    <string name="delete_bluetooth_device">対象Bluetooth機器の削除</string>
+    <string name="remove_bluetooth_device">対象Bluetooth機器の削除</string>
 
     <string name="add_bluetooth_device_dialog_title">対象Bluetooth機器を選択してください</string>
     <string name="delete_bluetooth_device_dialog_title">削除するBluetooth機器を選択してください</string>

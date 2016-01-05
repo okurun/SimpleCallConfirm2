@@ -29,8 +29,8 @@
             android:key="add_bluetooth_device"
             android:dependency="bluetooth_enabled"/>
         <Preference
-            android:title="@string/delete_bluetooth_device"
-            android:key="delete_bluetooth_device"
+            android:title="@string/remove_bluetooth_device"
+            android:key="remove_bluetooth_device"
             android:dependency="bluetooth_enabled"/>
     </PreferenceCategory>
 </PreferenceScreen>
