@@ -7,8 +7,10 @@
     <string name="theme">テーマ</string>
     <string name="fingerprint_confirm">指紋認証による発信確認</string>
     <string name="fingerprint_confirm_summary">発信確認に指紋認証を利用します</string>
+    <string name="fingerprint_not_supported">この端末は指紋認証APIをサポートしていません</string>
     <string name="enabled_bluetooth">Bluetooth</string>
     <string name="enabled_bluetooth_summary">対象Bluetooth機器を接続している間は発信確認を無効にします</string>
+    <string name="bluetooth_not_supported">この端末はBluetoothをサポートしていません</string>
     <string name="add_bluetooth_device">対象Bluetooth機器の追加</string>
     <string name="delete_bluetooth_device">対象Bluetooth機器の削除</string>
 

@@ -9,6 +9,7 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.view.ContextThemeWrapper;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -18,10 +19,10 @@ import java.util.Set;
 /**
  * Created by naoki on 16/01/04.
  */
-public class DeleteBluetoothDeviceListFragment extends DialogFragment {
+public class RemoveBluetoothDeviceListFragment extends DialogFragment {
     private List<BluetoothDevice> mDeviceList = new ArrayList<>();
 
-    public DeleteBluetoothDeviceListFragment() {
+    public RemoveBluetoothDeviceListFragment() {
     }
 
     /**
@@ -63,7 +64,9 @@ public class DeleteBluetoothDeviceListFragment extends DialogFragment {
             items[i++] = device.getName();
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        final Context context = getActivity().getApplicationContext();
+        int style = MainSettingsFragment.getIntTheme(context);
+        AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(getActivity(), style));
         builder.setTitle(R.string.add_bluetooth_device_dialog_title);
         builder.setItems(items, new DialogInterface.OnClickListener() {
             @Override
@@ -72,16 +75,22 @@ public class DeleteBluetoothDeviceListFragment extends DialogFragment {
                 BluetoothDevice device = mDeviceList.get(which);
                 int num = 0;
                 if (null != device) {
-                    num = MainSettingsFragment.deleteBluetoothDevice(context, device.getAddress());
+                    num = MainSettingsFragment.removeBluetoothDevice(context, device.getAddress());
                 }
 
                 if (0 == num) {
                     // 機器が登録されていなければBluetoothを無効にする
                     MainSettingsFragment.setBluetoothEnabled(context, false);
                     RefreshDisplayInterface refreshDisplay =
-                            (RefreshDisplayInterface)getFragmentManager().findFragmentById(android.R.id.content);
+                            (RefreshDisplayInterface) getFragmentManager().findFragmentById(android.R.id.content);
                     refreshDisplay.refreshDisplay();
                 }
+            }
+        });
+        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
             }
         });
 

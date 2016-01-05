@@ -12,18 +12,10 @@ public class SettingsActivity extends PreferenceActivity {
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        setTheme(MainSettingsFragment.getIntTheme(this));
         super.onCreate(savedInstanceState);
 
         getFragmentManager().beginTransaction()
                 .replace(android.R.id.content, new MainSettingsFragment()).commit();
-    }
-
-    /**
-     * onStop
-     */
-    @Override
-    protected void onStop() {
-        super.onStop();
-        finish();
     }
 }

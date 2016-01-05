@@ -9,6 +9,7 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.view.ContextThemeWrapper;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -65,16 +66,23 @@ public class AddBluetoothDeviceListFragment extends DialogFragment {
             items[i++] = device.getName();
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        final Context context = getActivity().getApplicationContext();
+        int style = MainSettingsFragment.getIntTheme(context);
+        AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(getActivity(), style));
         builder.setTitle(R.string.add_bluetooth_device_dialog_title);
         builder.setItems(items, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                Context context = getActivity().getApplicationContext();
                 BluetoothDevice device = mDeviceList.get(which);
                 if (null != device) {
                     MainSettingsFragment.addBluetoothDevice(context, device.getAddress());
                 }
+            }
+        });
+        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
             }
         });
 

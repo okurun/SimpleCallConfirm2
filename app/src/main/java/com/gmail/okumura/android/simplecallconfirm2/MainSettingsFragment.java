@@ -6,6 +6,7 @@ import android.app.Activity;
 import android.app.DialogFragment;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.fingerprint.FingerprintManager;
 import android.os.Build;
@@ -18,7 +19,10 @@ import android.preference.SwitchPreference;
 import android.widget.Toast;
 
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 /**
  * Created by naoki on 15/12/27.
@@ -33,31 +37,24 @@ public class MainSettingsFragment extends PreferenceFragment implements RefreshD
     private static final String PREF_FINGERPRINT_CONFIRM = "fingerprint_confirm";
     private static final String PREF_BLUETOOTH_ENABLED = "bluetooth_enabled";
     private static final String PREF_ADD_BLUETOOTH_DEVICE = "add_bluetooth_device";
-    private static final String PREF_DELETE_BLUETOOTH_DEVICE = "delete_bluetooth_device";
+    private static final String PREF_REMOVE_BLUETOOTH_DEVICE = "remove_bluetooth_device";
     private static final String PREF_BLUETOOTH_DEVICES = "bluetooth_devices";
 
     private static final String DIALOG_ADD_BLUETOOTH_DEVICE_LIST = "add_bluetooth_device_list";
-    private static final String DIALOG_DELETE_BLUETOOTH_DEVICE_LIST = "delete_bluetooth_device_list";
+    private static final String DIALOG_REMOVE_BLUETOOTH_DEVICE_LIST = "remove_bluetooth_device_list";
 
-    private static final CharSequence[] THEME_ENTRIES = new CharSequence[] {
-            "DeviceDefault",
-            "DeviceDefault Light",
-            "Material",
-            "Material Light",
-            "Holo",
-            "Holo Light",
-            "Default",
-    };
-
-    private static final CharSequence[] THEME_ENTRY_VALUES = new CharSequence[] {
-            String.valueOf(android.R.style.Theme_DeviceDefault),
-            String.valueOf(android.R.style.Theme_DeviceDefault_Light),
-            String.valueOf(android.R.style.Theme_Material),
-            String.valueOf(android.R.style.Theme_Material_Light),
-            String.valueOf(android.R.style.Theme_Holo),
-            String.valueOf(android.R.style.Theme_Holo_Light),
-            String.valueOf(android.R.style.Theme),
-    };
+    private static final Map<Integer, CharSequence> THEME_ENTRIES = new TreeMap<>();
+    static {
+        THEME_ENTRIES.put(android.R.style.Theme, "No Theme");
+        THEME_ENTRIES.put(android.R.style.Theme_Holo, "Holo");
+        THEME_ENTRIES.put(android.R.style.Theme_Holo_Light, "Holo Light");
+        THEME_ENTRIES.put(android.R.style.Theme_DeviceDefault, "DeviceDefault");
+        THEME_ENTRIES.put(android.R.style.Theme_DeviceDefault_Light, "DeviceDefault Light");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            THEME_ENTRIES.put(android.R.style.Theme_Material, "Material");
+            THEME_ENTRIES.put(android.R.style.Theme_Material_Light, "Material Light");
+        }
+    }
 
     public static int getIntTheme(Context context) {
         return Integer.valueOf(getTheme(context));
@@ -105,7 +102,7 @@ public class MainSettingsFragment extends PreferenceFragment implements RefreshD
                 .putStringSet(PREF_BLUETOOTH_DEVICES, addressSet).commit();
     }
 
-    public static int deleteBluetoothDevice(Context context, String address) {
+    public static int removeBluetoothDevice(Context context, String address) {
         Set<String> addressSet = getBluetoothDevices(context);
         for (String addr : addressSet) {
             if (addr.equals(address)) {
@@ -129,17 +126,9 @@ public class MainSettingsFragment extends PreferenceFragment implements RefreshD
      * @param preference
      * @param theme
      */
-    private static void setThemePreferenceSummary(Preference preference, String theme) {
-        // 現在選択されているテーマのキーを取得する
-        int key = 0;
-        for (int i = 0; i < THEME_ENTRY_VALUES.length; i++) {
-            if (theme.equals(THEME_ENTRY_VALUES[i])) {
-                key = i;
-                break;
-            }
-        }
+    private static void setThemePreferenceSummary(Preference preference, CharSequence theme) {
         // サマリーをセットする
-        preference.setSummary(THEME_ENTRIES[key]);
+        preference.setSummary(THEME_ENTRIES.get(Integer.parseInt(theme.toString())));
     }
 
     /**
@@ -281,7 +270,7 @@ public class MainSettingsFragment extends PreferenceFragment implements RefreshD
         initFingerprintConfirmPreference();
         initBluetoothEnabledPreference();
         initAddBluetoothDevicePreference();
-        initDeleteBluetoothDevicePreference();
+        initRemoveBluetoothDevicePreference();
     }
 
     /**
@@ -402,13 +391,26 @@ public class MainSettingsFragment extends PreferenceFragment implements RefreshD
      */
     private void initThemePreference() {
         ListPreference themePref = (ListPreference)findPreference(PREF_THEME);
-        themePref.setEntries(THEME_ENTRIES);
-        themePref.setEntryValues(THEME_ENTRY_VALUES);
+        CharSequence[] entries = new CharSequence[THEME_ENTRIES.size()];
+        CharSequence[] entryValues = new CharSequence[THEME_ENTRIES.size()];
+        int i = 0;
+        Iterator<Integer> iterator = THEME_ENTRIES.keySet().iterator();
+        while (iterator.hasNext()) {
+            Integer key = iterator.next();
+            entries[i] = THEME_ENTRIES.get(key);
+            entryValues[i++] = String.valueOf(key);
+        }
+        themePref.setEntries(entries);
+        themePref.setEntryValues(entryValues);
         themePref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
             public boolean onPreferenceChange(Preference preference, Object newValue) {
-                String theme = (String) newValue;
+                CharSequence theme = (CharSequence) newValue;
                 setThemePreferenceSummary(preference, theme);
+                // SettingsActivityを再起動してテーマを反映する
+                Activity activity = getActivity();
+                startActivity(new Intent(activity, SettingsActivity.class));
+                activity.finish();
                 return true;
             }
         });
@@ -474,10 +476,12 @@ public class MainSettingsFragment extends PreferenceFragment implements RefreshD
             } else {
                 // 指紋認証機能を無効にする
                 fingerprintConfirmPref.setEnabled(false);
+                fingerprintConfirmPref.setSummaryOff(R.string.fingerprint_not_supported);
             }
         } else {
             // 指紋認証機能を無効にする
             fingerprintConfirmPref.setEnabled(false);
+            fingerprintConfirmPref.setSummaryOff(R.string.fingerprint_not_supported);
         }
     }
 
@@ -492,6 +496,7 @@ public class MainSettingsFragment extends PreferenceFragment implements RefreshD
         if (mBluetoothAdapter == null) {
             // 端末がBluetoothをサポートしていなければ無効にする
             bluetoothEnabledPref.setEnabled(false);
+            bluetoothEnabledPref.setSummaryOff(R.string.bluetooth_not_supported);
             return;
         }
 
@@ -530,13 +535,13 @@ public class MainSettingsFragment extends PreferenceFragment implements RefreshD
         });
     }
 
-    private void initDeleteBluetoothDevicePreference() {
-        Preference deleteBluetoothDevicePref = findPreference(PREF_DELETE_BLUETOOTH_DEVICE);
-        deleteBluetoothDevicePref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+    private void initRemoveBluetoothDevicePreference() {
+        Preference removeBluetoothDevicePref = findPreference(PREF_REMOVE_BLUETOOTH_DEVICE);
+        removeBluetoothDevicePref.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
-                DialogFragment dialogFragment = new DeleteBluetoothDeviceListFragment();
-                dialogFragment.show(getFragmentManager(), DIALOG_DELETE_BLUETOOTH_DEVICE_LIST);
+                DialogFragment dialogFragment = new RemoveBluetoothDeviceListFragment();
+                dialogFragment.show(getFragmentManager(), DIALOG_REMOVE_BLUETOOTH_DEVICE_LIST);
                 return true;
             }
         });
