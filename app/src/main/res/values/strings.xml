@@ -30,6 +30,5 @@
     <string name="disable_fingerprint_confirm_message">権限がないため、指紋認証による発信確認をOFFにしました</string>
     <string name="disable_bluetooth_message">権限がないため、BluetoothをOFFにしました</string>
 
-<!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="main_widget_desc">Simple Call Confirmを有効/無効にします</string>
 </resources>

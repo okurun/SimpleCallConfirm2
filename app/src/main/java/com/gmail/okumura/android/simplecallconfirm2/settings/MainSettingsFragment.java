@@ -1,4 +1,4 @@
-package com.gmail.okumura.android.simplecallconfirm2;
+package com.gmail.okumura.android.simplecallconfirm2.settings;
 
 import android.Manifest;
 import android.annotation.TargetApi;
@@ -16,7 +16,11 @@ import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.SwitchPreference;
+import android.util.Log;
 import android.widget.Toast;
+
+import com.gmail.okumura.android.simplecallconfirm2.R;
+import com.gmail.okumura.android.simplecallconfirm2.widget.MainWidgetUpdateReceiver;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -28,98 +32,15 @@ import java.util.TreeMap;
  * Created by naoki on 15/12/27.
  */
 public class MainSettingsFragment extends PreferenceFragment implements RefreshDisplayInterface {
+    private static final String PREF_ADD_BLUETOOTH_DEVICE = "add_bluetooth_device";
+    private static final String PREF_REMOVE_BLUETOOTH_DEVICE = "remove_bluetooth_device";
+
     private static final int REQUEST_CODE_REQUEST_PERMISSIONS = 1;
     private static final int REQUEST_CODE_REQUEST_FINGERPRINT_PERMISSIONS = 2;
     private static final int REQUEST_CODE_REQUEST_BLUETOOTH_PERMISSIONS = 3;
 
-    private static final String PREF_CALL_CONFIRM_ENABLED = "call_confirm_enabled";
-    private static final String PREF_THEME = "theme";
-    private static final String PREF_FINGERPRINT_CONFIRM = "fingerprint_confirm";
-    private static final String PREF_BLUETOOTH_ENABLED = "bluetooth_enabled";
-    private static final String PREF_ADD_BLUETOOTH_DEVICE = "add_bluetooth_device";
-    private static final String PREF_REMOVE_BLUETOOTH_DEVICE = "remove_bluetooth_device";
-    private static final String PREF_BLUETOOTH_DEVICES = "bluetooth_devices";
-
     private static final String DIALOG_ADD_BLUETOOTH_DEVICE_LIST = "add_bluetooth_device_list";
     private static final String DIALOG_REMOVE_BLUETOOTH_DEVICE_LIST = "remove_bluetooth_device_list";
-
-    private static final Map<Integer, CharSequence> THEME_ENTRIES = new TreeMap<>();
-    static {
-        THEME_ENTRIES.put(android.R.style.Theme, "No Theme");
-        THEME_ENTRIES.put(android.R.style.Theme_Holo, "Holo");
-        THEME_ENTRIES.put(android.R.style.Theme_Holo_Light, "Holo Light");
-        THEME_ENTRIES.put(android.R.style.Theme_DeviceDefault, "DeviceDefault");
-        THEME_ENTRIES.put(android.R.style.Theme_DeviceDefault_Light, "DeviceDefault Light");
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            THEME_ENTRIES.put(android.R.style.Theme_Material, "Material");
-            THEME_ENTRIES.put(android.R.style.Theme_Material_Light, "Material Light");
-        }
-    }
-
-    public static int getIntTheme(Context context) {
-        return Integer.valueOf(getTheme(context));
-    }
-
-    public static String getTheme(Context context) {
-        return PreferenceManager.getDefaultSharedPreferences(context)
-                .getString(PREF_THEME, String.valueOf(android.R.style.Theme_DeviceDefault));
-    }
-
-    public static boolean isCallConfirmEnabled(Context context) {
-        return PreferenceManager.getDefaultSharedPreferences(context)
-                .getBoolean(PREF_CALL_CONFIRM_ENABLED, true);
-    }
-
-    public static void setCallConfirmEnabled(Context context, boolean enabled) {
-        PreferenceManager.getDefaultSharedPreferences(context).edit()
-                .putBoolean(PREF_CALL_CONFIRM_ENABLED, enabled).commit();
-    }
-
-    public static boolean isFingerprintConfirm(Context context) {
-        return PreferenceManager.getDefaultSharedPreferences(context)
-                .getBoolean(PREF_FINGERPRINT_CONFIRM, false);
-    }
-
-    public static void setFingerprintConfirm(Context context, boolean enabled) {
-        PreferenceManager.getDefaultSharedPreferences(context).edit()
-                .putBoolean(PREF_FINGERPRINT_CONFIRM, enabled).commit();
-    }
-
-    public static boolean isBluetoothEnabled(Context context) {
-        return PreferenceManager.getDefaultSharedPreferences(context)
-                .getBoolean(PREF_BLUETOOTH_ENABLED, false);
-    }
-
-    public static void setBluetoothEnabled(Context context, boolean enabled) {
-        PreferenceManager.getDefaultSharedPreferences(context).edit()
-                .putBoolean(PREF_BLUETOOTH_ENABLED, enabled).commit();
-    }
-
-    public static void addBluetoothDevice(Context context, String address) {
-        Set<String> addressSet = getBluetoothDevices(context);
-        addressSet.add(address);
-        PreferenceManager.getDefaultSharedPreferences(context).edit()
-                .putStringSet(PREF_BLUETOOTH_DEVICES, addressSet).commit();
-    }
-
-    public static int removeBluetoothDevice(Context context, String address) {
-        Set<String> addressSet = getBluetoothDevices(context);
-        for (String addr : addressSet) {
-            if (addr.equals(address)) {
-                addressSet.remove(addr);
-                break;
-            }
-        }
-        PreferenceManager.getDefaultSharedPreferences(context).edit()
-                .putStringSet(PREF_BLUETOOTH_DEVICES, addressSet).commit();
-
-        return addressSet.size();
-    }
-
-    public static Set<String> getBluetoothDevices(Context context) {
-        return PreferenceManager.getDefaultSharedPreferences(context)
-                        .getStringSet(PREF_BLUETOOTH_DEVICES, new HashSet<String>());
-    }
 
     /**
      * テーマのサマリーをセットする
@@ -128,7 +49,7 @@ public class MainSettingsFragment extends PreferenceFragment implements RefreshD
      */
     private static void setThemePreferenceSummary(Preference preference, CharSequence theme) {
         // サマリーをセットする
-        preference.setSummary(THEME_ENTRIES.get(Integer.parseInt(theme.toString())));
+        preference.setSummary(SettingsManager.THEME_ENTRIES.get(Integer.parseInt(theme.toString())));
     }
 
     /**
@@ -139,9 +60,9 @@ public class MainSettingsFragment extends PreferenceFragment implements RefreshD
     public static boolean hasCallConfirmPermissions(Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             return context.checkSelfPermission(Manifest.permission.PROCESS_OUTGOING_CALLS)
-                            == PackageManager.PERMISSION_GRANTED
+                    == PackageManager.PERMISSION_GRANTED
                     && context.checkSelfPermission(Manifest.permission.CALL_PHONE)
-                            == PackageManager.PERMISSION_GRANTED;
+                    == PackageManager.PERMISSION_GRANTED;
         }
 
         return true;
@@ -154,7 +75,7 @@ public class MainSettingsFragment extends PreferenceFragment implements RefreshD
      */
     @TargetApi(Build.VERSION_CODES.M)
     public static void requestCallConfirmPermissions(Activity activity, int requestCode) {
-        String[] permissions = new String[] {
+        String[] permissions = new String[]{
                 Manifest.permission.PROCESS_OUTGOING_CALLS,
                 Manifest.permission.CALL_PHONE,
         };
@@ -182,7 +103,7 @@ public class MainSettingsFragment extends PreferenceFragment implements RefreshD
      */
     @TargetApi(Build.VERSION_CODES.M)
     public static void requestFingerprintPermissions(Activity activity, int requestCode) {
-        String[] permissions = new String[] {
+        String[] permissions = new String[]{
                 Manifest.permission.USE_FINGERPRINT,
         };
         activity.requestPermissions(permissions, requestCode);
@@ -250,7 +171,7 @@ public class MainSettingsFragment extends PreferenceFragment implements RefreshD
      */
     @TargetApi(Build.VERSION_CODES.M)
     public static void requestBluetoothPermissions(Activity activity, int requestCode) {
-        String[] permissions = new String[] {
+        String[] permissions = new String[]{
                 Manifest.permission.BLUETOOTH,
         };
         activity.requestPermissions(permissions, requestCode);
@@ -290,20 +211,21 @@ public class MainSettingsFragment extends PreferenceFragment implements RefreshD
         Context context = getActivity().getApplicationContext();
 
         SwitchPreference callConfirmEnabledPref =
-                (SwitchPreference)findPreference(PREF_CALL_CONFIRM_ENABLED);
-        callConfirmEnabledPref.setChecked(isCallConfirmEnabled(context));
+                (SwitchPreference) findPreference(SettingsManager.PREF_CALL_CONFIRM_ENABLED);
+        callConfirmEnabledPref.setChecked(SettingsManager.isCallConfirmEnabled(context));
 
-        ListPreference themePref = (ListPreference)findPreference(PREF_THEME);
-        String theme = getTheme(context);
+        ListPreference themePref = (ListPreference) findPreference(SettingsManager.PREF_THEME);
+        String theme = SettingsManager.getTheme(context);
         themePref.setValue(theme);
         setThemePreferenceSummary(themePref, theme);
 
         SwitchPreference fingerprintConfirmPref =
-                (SwitchPreference)findPreference(PREF_FINGERPRINT_CONFIRM);
-        fingerprintConfirmPref.setChecked(isFingerprintConfirm(context));
+                (SwitchPreference) findPreference(SettingsManager.PREF_FINGERPRINT_CONFIRM);
+        fingerprintConfirmPref.setChecked(SettingsManager.isFingerprintConfirm(context));
 
-        SwitchPreference bluetoothEnabledPref = (SwitchPreference)findPreference(PREF_BLUETOOTH_ENABLED);
-        bluetoothEnabledPref.setChecked(isBluetoothEnabled(context));
+        SwitchPreference bluetoothEnabledPref =
+                (SwitchPreference) findPreference(SettingsManager.PREF_BLUETOOTH_ENABLED);
+        bluetoothEnabledPref.setChecked(SettingsManager.isBluetoothEnabled(context));
     }
 
     /**
@@ -320,41 +242,44 @@ public class MainSettingsFragment extends PreferenceFragment implements RefreshD
                 for (int i = 0; i < 2; i++) {
                     if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
                         // パーミッションがないのでSimpleCallConfirmを無効にする
-                        setCallConfirmEnabled(context, false);
-                        Toast.makeText(context, R.string.disable_confirm_message, Toast.LENGTH_LONG).show();
+                        SettingsManager.setCallConfirmEnabled(context, false);
+                        Toast.makeText(context,
+                                R.string.disable_confirm_message, Toast.LENGTH_LONG).show();
                         return;
                     }
                 }
-                setCallConfirmEnabled(context, true);
+                SettingsManager.setCallConfirmEnabled(context, true);
                 SwitchPreference callConfirmEnabledPref =
-                        ((SwitchPreference)findPreference(PREF_CALL_CONFIRM_ENABLED));
+                        ((SwitchPreference) findPreference(SettingsManager.PREF_CALL_CONFIRM_ENABLED));
                 callConfirmEnabledPref.setChecked(true);
                 break;
             case REQUEST_CODE_REQUEST_FINGERPRINT_PERMISSIONS:
                 if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
                     // パーミッションがないので指紋認証を無効にする
-                    setFingerprintConfirm(context, false);
-                    Toast.makeText(context, R.string.disable_fingerprint_confirm_message, Toast.LENGTH_LONG).show();
+                    SettingsManager.setFingerprintConfirm(context, false);
+                    Toast.makeText(context,
+                            R.string.disable_fingerprint_confirm_message, Toast.LENGTH_LONG).show();
                     return;
                 }
-                setFingerprintConfirm(context, true);
+                SettingsManager.setFingerprintConfirm(context, true);
                 SwitchPreference fingerprintConfirmPref =
-                        ((SwitchPreference)findPreference(PREF_FINGERPRINT_CONFIRM));
+                        ((SwitchPreference) findPreference(SettingsManager.PREF_FINGERPRINT_CONFIRM));
                 fingerprintConfirmPref.setChecked(true);
                 break;
             case REQUEST_CODE_REQUEST_BLUETOOTH_PERMISSIONS:
                 if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
                     // パーミッションがないのでBluetoothを無効にする
-                    setBluetoothEnabled(context, false);
-                    Toast.makeText(context, R.string.disable_bluetooth_message, Toast.LENGTH_LONG).show();
+                    SettingsManager.setBluetoothEnabled(context, false);
+                    Toast.makeText(context,
+                            R.string.disable_bluetooth_message, Toast.LENGTH_LONG).show();
                     return;
                 }
-                setBluetoothEnabled(context, true);
+                SettingsManager.setBluetoothEnabled(context, true);
                 SwitchPreference bluetoothEnabledPref =
-                        ((SwitchPreference)findPreference(PREF_BLUETOOTH_ENABLED));
+                        ((SwitchPreference) findPreference(SettingsManager.PREF_BLUETOOTH_ENABLED));
                 bluetoothEnabledPref.setChecked(true);
 
-                if (MainSettingsFragment.getBluetoothDevices(context).size() < 1) {
+                if (SettingsManager.getBluetoothDevices(context).size() < 1) {
                     DialogFragment dialogFragment = new AddBluetoothDeviceListFragment();
                     dialogFragment.show(getFragmentManager(), DIALOG_ADD_BLUETOOTH_DEVICE_LIST);
                 }
@@ -362,13 +287,14 @@ public class MainSettingsFragment extends PreferenceFragment implements RefreshD
                 break;
         }
     }
+
     /**
      * 発信確認設定の初期化
      */
     private void initCallConfirmEnabledPreference() {
         final Context context = getActivity().getApplicationContext();
         SwitchPreference callConfirmEnabledPref =
-                (SwitchPreference)findPreference(PREF_CALL_CONFIRM_ENABLED);
+                (SwitchPreference) findPreference(SettingsManager.PREF_CALL_CONFIRM_ENABLED);
 
         callConfirmEnabledPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
@@ -381,6 +307,12 @@ public class MainSettingsFragment extends PreferenceFragment implements RefreshD
                         return false;
                     }
                 }
+
+                // Widgetを更新
+                Intent intent = new Intent();
+                intent.setAction(MainWidgetUpdateReceiver.ACTION);
+                context.sendBroadcast(intent);
+
                 return true;
             }
         });
@@ -390,14 +322,14 @@ public class MainSettingsFragment extends PreferenceFragment implements RefreshD
      * テーマ設定を初期化する
      */
     private void initThemePreference() {
-        ListPreference themePref = (ListPreference)findPreference(PREF_THEME);
-        CharSequence[] entries = new CharSequence[THEME_ENTRIES.size()];
-        CharSequence[] entryValues = new CharSequence[THEME_ENTRIES.size()];
+        ListPreference themePref = (ListPreference) findPreference(SettingsManager.PREF_THEME);
+        CharSequence[] entries = new CharSequence[SettingsManager.THEME_ENTRIES.size()];
+        CharSequence[] entryValues = new CharSequence[SettingsManager.THEME_ENTRIES.size()];
         int i = 0;
-        Iterator<Integer> iterator = THEME_ENTRIES.keySet().iterator();
+        Iterator<Integer> iterator = SettingsManager.THEME_ENTRIES.keySet().iterator();
         while (iterator.hasNext()) {
             Integer key = iterator.next();
-            entries[i] = THEME_ENTRIES.get(key);
+            entries[i] = SettingsManager.THEME_ENTRIES.get(key);
             entryValues[i++] = String.valueOf(key);
         }
         themePref.setEntries(entries);
@@ -422,7 +354,8 @@ public class MainSettingsFragment extends PreferenceFragment implements RefreshD
     private void initFingerprintConfirmPreference() {
         final Context context = getActivity().getApplicationContext();
         final SwitchPreference fingerprintConfirmPref =
-                (SwitchPreference)findPreference(PREF_FINGERPRINT_CONFIRM);
+                (SwitchPreference) findPreference(SettingsManager.PREF_FINGERPRINT_CONFIRM);
+        fingerprintConfirmPref.setEnabled(false);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             // 端末が指紋認証機能をもっているかチェック
@@ -430,7 +363,7 @@ public class MainSettingsFragment extends PreferenceFragment implements RefreshD
                 fingerprintConfirmPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                     @Override
                     public boolean onPreferenceChange(Preference preference, Object newValue) {
-                        if ((boolean)newValue) {
+                        if ((boolean) newValue) {
                             // ----- 有効にする -----
                             // 指紋認証に必要なパーミッションの確認
                             if (!hasFingerprintPermissions(context)) {
@@ -448,26 +381,47 @@ public class MainSettingsFragment extends PreferenceFragment implements RefreshD
                         } else {
                             // ----- 無効にする -----
                             // 無効にする前に指紋認証する
-//                            FingerprintManager fingerprintManager =
-//                                    (FingerprintManager)context.getSystemService(Activity.FINGERPRINT_SERVICE);
-//                            // TODO ここが動作しない
-//                            fingerprintManager.authenticate(null, null, 0, new FingerprintManager.AuthenticationCallback() {
-//                                @Override
-//                                public void onAuthenticationError(int errorCode, CharSequence errString) {
+//                            try {
+//                                Cipher cipher = Cipher.getInstance("AES");
+//                                byte[] key = new byte[32];
+//                                for (int i = 0; i < 32; i++) {
+//                                    key[i] = 0;
 //                                }
-//
-//                                @Override
-//                                public void onAuthenticationFailed() {
+//                                cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "AES"));
+//                                final FingerprintManager.CryptoObject cryptoObject =
+//                                        new FingerprintManager.CryptoObject(cipher);
+//                                final CancellationSignal signal = new CancellationSignal();
+//                                signal.setOnCancelListener(new CancellationSignal.OnCancelListener() {
+//                                    @Override
+//                                    public void onCancel() {
+//                                    }
+//                                });
+//                                FingerprintManager fingerprintManager =
+//                                        (FingerprintManager) context.getSystemService(Activity.FINGERPRINT_SERVICE);
+//                                if (context.checkSelfPermission(Manifest.permission.USE_FINGERPRINT) != PackageManager.PERMISSION_GRANTED) {
+//                                    return false;
 //                                }
+//                                // TODO ここが動作しない
+//                                fingerprintManager.authenticate(cryptoObject, signal, 0, new FingerprintManager.AuthenticationCallback() {
+//                                    @Override
+//                                    public void onAuthenticationError(int errorCode, CharSequence errString) {
+//                                    }
 //
-//                                @Override
-//                                public void onAuthenticationSucceeded(FingerprintManager.AuthenticationResult result) {
-//                                    setFingerprintConfirm(context, false);
-//                                    fingerprintConfirmPref.setEnabled(false);
-//                                }
-//                            }, new Handler());
+//                                    @Override
+//                                    public void onAuthenticationFailed() {
+//                                    }
 //
-//                            return false;
+//                                    @Override
+//                                    public void onAuthenticationSucceeded(FingerprintManager.AuthenticationResult result) {
+//                                        setFingerprintConfirm(context, false);
+//                                        fingerprintConfirmPref.setEnabled(false);
+//                                    }
+//                                }, new Handler());
+//                            } catch (Exception e) {
+//                                e.printStackTrace();
+//                            }
+
+                            return false;
                         }
 
                         return true;
@@ -490,7 +444,8 @@ public class MainSettingsFragment extends PreferenceFragment implements RefreshD
      */
     private void initBluetoothEnabledPreference() {
         final Context context = getActivity().getApplicationContext();
-        SwitchPreference bluetoothEnabledPref = (SwitchPreference)findPreference(PREF_BLUETOOTH_ENABLED);
+        SwitchPreference bluetoothEnabledPref =
+                (SwitchPreference)findPreference(SettingsManager.PREF_BLUETOOTH_ENABLED);
 
         BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mBluetoothAdapter == null) {
@@ -513,7 +468,7 @@ public class MainSettingsFragment extends PreferenceFragment implements RefreshD
                         }
                     }
 
-                    if (MainSettingsFragment.getBluetoothDevices(context).size() < 1) {
+                    if (SettingsManager.getBluetoothDevices(context).size() < 1) {
                         DialogFragment dialogFragment = new AddBluetoothDeviceListFragment();
                         dialogFragment.show(getFragmentManager(), DIALOG_ADD_BLUETOOTH_DEVICE_LIST);
                     }

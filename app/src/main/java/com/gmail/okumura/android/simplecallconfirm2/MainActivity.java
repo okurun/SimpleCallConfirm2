@@ -1,12 +1,14 @@
 package com.gmail.okumura.android.simplecallconfirm2;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.widget.Toast;
+
+import com.gmail.okumura.android.simplecallconfirm2.settings.MainSettingsFragment;
+import com.gmail.okumura.android.simplecallconfirm2.settings.SettingsActivity;
+import com.gmail.okumura.android.simplecallconfirm2.settings.SettingsManager;
 
 public class MainActivity extends Activity {
     private static final int REQUEST_CODE_REQUEST_PERMISSIONS = 1;
@@ -17,7 +19,7 @@ public class MainActivity extends Activity {
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        setTheme(MainSettingsFragment.getIntTheme(this));
+        setTheme(SettingsManager.getIntTheme(this));
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -41,10 +43,10 @@ public class MainActivity extends Activity {
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         switch (requestCode) {
             case REQUEST_CODE_REQUEST_PERMISSIONS:
-                for (int i = 0; i < 2; i++) {
+                for (int i = 0; i < grantResults.length; i++) {
                     if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
                         // パーミッションがないのでSimpleCallConfirmを無効にする
-                        MainSettingsFragment.setCallConfirmEnabled(this, false);
+                        SettingsManager.setCallConfirmEnabled(this, false);
                         Toast.makeText(this, R.string.disable_confirm_message, Toast.LENGTH_LONG).show();
                         break;
                     }

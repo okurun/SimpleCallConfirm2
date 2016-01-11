@@ -14,7 +14,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme" >
         <activity
-            android:name=".MainActivity"
+            android:name="com.gmail.okumura.android.simplecallconfirm2.MainActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar" >
             <intent-filter>
@@ -24,18 +24,34 @@
             </intent-filter>
         </activity>
 
-        <receiver android:name=".OutgoingCallsReceiver" >
+        <receiver android:name="com.gmail.okumura.android.simplecallconfirm2.OutgoingCallsReceiver" >
             <intent-filter>
                 <action android:name="android.intent.action.NEW_OUTGOING_CALL" />
             </intent-filter>
         </receiver>
 
+        <receiver android:name="com.gmail.okumura.android.simplecallconfirm2.widget.MainWidgetProvider" >
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/main_wedget_provider" />
+        </receiver>
+
+        <receiver android:name="com.gmail.okumura.android.simplecallconfirm2.widget.MainWidgetUpdateReceiver" >
+            <intent-filter>
+                <action android:name="UPDATE_SIMPLE_CALL_CONFIRM_MAIN_WIDGET" />
+            </intent-filter>
+        </receiver>
+
         <activity
-            android:name=".ConfirmActivity"
+            android:name="com.gmail.okumura.android.simplecallconfirm2.ConfirmActivity"
             android:theme="@android:style/Theme.Translucent" />
 
         <activity
-            android:name=".SettingsActivity"
+            android:name="com.gmail.okumura.android.simplecallconfirm2.settings.SettingsActivity"
             android:label="@string/title_activity_settings"
             android:theme="@android:style/Theme.DeviceDefault">
         </activity>

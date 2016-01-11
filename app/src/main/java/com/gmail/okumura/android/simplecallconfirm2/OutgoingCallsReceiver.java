@@ -13,6 +13,9 @@ import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
 
+import com.gmail.okumura.android.simplecallconfirm2.settings.MainSettingsFragment;
+import com.gmail.okumura.android.simplecallconfirm2.settings.SettingsManager;
+
 import java.util.Set;
 
 /**
@@ -46,21 +49,20 @@ public class OutgoingCallsReceiver extends BroadcastReceiver {
         }
 
         // 発信確認が有効か確認
-        if (!MainSettingsFragment.isCallConfirmEnabled(context)) {
+        if (!SettingsManager.isCallConfirmEnabled(context)) {
             return;
         }
 
         // Bluetoothが有効か確認
-        if (MainSettingsFragment.isBluetoothEnabled(context)) {
+        if (SettingsManager.isBluetoothEnabled(context)) {
             mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
             if (mBluetoothAdapter != null) {
                 if (mBluetoothAdapter.isEnabled()) {
                     mBluetoothAdapter.getProfileProxy(context, new BluetoothProfile.ServiceListener() {
                         public void onServiceConnected(int profile, BluetoothProfile proxy) {
-                            Log.d("nokumura", "onServiceConnected");
                             if (profile == BluetoothProfile.HEADSET) {
                                 BluetoothHeadset mBluetoothHeadset = (BluetoothHeadset) proxy;
-                                Set<String> addressSet = MainSettingsFragment.getBluetoothDevices(context);
+                                Set<String> addressSet = SettingsManager.getBluetoothDevices(context);
                                 for (BluetoothDevice device : mBluetoothHeadset.getConnectedDevices()) {
                                     if (addressSet.contains(device.getAddress())) {
                                         call(context, intent.getStringExtra(Intent.EXTRA_PHONE_NUMBER));
@@ -72,7 +74,6 @@ public class OutgoingCallsReceiver extends BroadcastReceiver {
                         }
 
                         public void onServiceDisconnected(int profile) {
-                            Log.d("nokumura", "onServiceDisconnected");
                         }
                     }, BluetoothProfile.HEADSET);
 
@@ -107,7 +108,7 @@ public class OutgoingCallsReceiver extends BroadcastReceiver {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
                 && context.checkSelfPermission(Manifest.permission.PROCESS_OUTGOING_CALLS)
                 != PackageManager.PERMISSION_GRANTED) {
-            // TODO
+            // TODO 権限がないので発信できない
             return;
         }
 

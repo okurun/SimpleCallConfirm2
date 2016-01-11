@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+                    android:initialLayout="@layout/widget_main"
+                    android:minHeight="72dip"
+                    android:minWidth="72dip"
+                    android:scaleType="fitXY"
+                    android:resizeMode="horizontal|vertical"
+                    android:previewImage="@mipmap/ic_launcher"
+                    android:updatePeriodMillis="3600000" >
+</appwidget-provider>

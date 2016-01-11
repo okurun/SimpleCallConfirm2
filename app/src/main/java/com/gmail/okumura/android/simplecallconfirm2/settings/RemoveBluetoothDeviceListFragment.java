@@ -1,4 +1,4 @@
-package com.gmail.okumura.android.simplecallconfirm2;
+package com.gmail.okumura.android.simplecallconfirm2.settings;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -12,17 +12,19 @@ import android.os.Bundle;
 import android.view.ContextThemeWrapper;
 import android.widget.Toast;
 
+import com.gmail.okumura.android.simplecallconfirm2.R;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-public class AddBluetoothDeviceListFragment extends DialogFragment {
+/**
+ * Created by naoki on 16/01/04.
+ */
+public class RemoveBluetoothDeviceListFragment extends DialogFragment {
     private List<BluetoothDevice> mDeviceList = new ArrayList<>();
 
-    /**
-     * コンストラクター
-     */
-    public AddBluetoothDeviceListFragment() {
+    public RemoveBluetoothDeviceListFragment() {
     }
 
     /**
@@ -36,14 +38,12 @@ public class AddBluetoothDeviceListFragment extends DialogFragment {
         Activity activity = getActivity();
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         Set<BluetoothDevice> pairedDevices = bluetoothAdapter.getBondedDevices();
-        Set<String> targetDevices = MainSettingsFragment.getBluetoothDevices(activity);
+        Set<String> targetDevices = SettingsManager.getBluetoothDevices(activity);
         for (BluetoothDevice device : pairedDevices) {
-            if (targetDevices.contains(device.getAddress())) {
-                // すでに登録されているものは表示しない
+            if (!targetDevices.contains(device.getAddress())) {
+                // 登録されているものだけ表示する
                 continue;
             }
-            // TODO ヘッドセットのみに絞り込む
-
             mDeviceList.add(device);
         }
 
@@ -67,15 +67,25 @@ public class AddBluetoothDeviceListFragment extends DialogFragment {
         }
 
         final Context context = getActivity().getApplicationContext();
-        int style = MainSettingsFragment.getIntTheme(context);
+        int style = SettingsManager.getIntTheme(context);
         AlertDialog.Builder builder = new AlertDialog.Builder(new ContextThemeWrapper(getActivity(), style));
         builder.setTitle(R.string.add_bluetooth_device_dialog_title);
         builder.setItems(items, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                Context context = getActivity().getApplicationContext();
                 BluetoothDevice device = mDeviceList.get(which);
+                int num = 0;
                 if (null != device) {
-                    MainSettingsFragment.addBluetoothDevice(context, device.getAddress());
+                    num = SettingsManager.removeBluetoothDevice(context, device.getAddress());
+                }
+
+                if (0 == num) {
+                    // 機器が登録されていなければBluetoothを無効にする
+                    SettingsManager.setBluetoothEnabled(context, false);
+                    RefreshDisplayInterface refreshDisplay =
+                            (RefreshDisplayInterface) getFragmentManager().findFragmentById(android.R.id.content);
+                    refreshDisplay.refreshDisplay();
                 }
             }
         });
@@ -87,23 +97,5 @@ public class AddBluetoothDeviceListFragment extends DialogFragment {
         });
 
         return builder.create();
-    }
-
-    /**
-     * onCancel
-     * @param dialog
-     */
-    @Override
-    public void onCancel(DialogInterface dialog) {
-        super.onCancel(dialog);
-
-        Context context = getActivity().getApplicationContext();
-        if (MainSettingsFragment.getBluetoothDevices(context).size() < 1) {
-            // 機器が登録されていなければBluetoothを無効にする
-            MainSettingsFragment.setBluetoothEnabled(context, false);
-            RefreshDisplayInterface refreshDisplay =
-                    (RefreshDisplayInterface)getFragmentManager().findFragmentById(android.R.id.content);
-            refreshDisplay.refreshDisplay();
-        }
     }
 }

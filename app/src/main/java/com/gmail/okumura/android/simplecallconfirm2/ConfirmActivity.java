@@ -14,6 +14,8 @@ import android.view.ContextThemeWrapper;
 import android.view.Window;
 import android.widget.Toast;
 
+import com.gmail.okumura.android.simplecallconfirm2.settings.MainSettingsFragment;
+import com.gmail.okumura.android.simplecallconfirm2.settings.SettingsManager;
 
 public class ConfirmActivity extends Activity {
     private static final int REQUEST_CODE_REQUEST_CALL_PERMISSION = 1;
@@ -31,7 +33,7 @@ public class ConfirmActivity extends Activity {
 
         mNumber = getIntent().getStringExtra(Intent.EXTRA_PHONE_NUMBER);
 
-        if (MainSettingsFragment.isFingerprintConfirm(this)) {
+        if (SettingsManager.isFingerprintConfirm(this)) {
             showFingerprintConfirmDialog();
         } else {
             showConfirmDialog();
@@ -58,7 +60,7 @@ public class ConfirmActivity extends Activity {
         switch (requestCode) {
             case REQUEST_CODE_REQUEST_CALL_PERMISSION:
                 if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                    MainSettingsFragment.setCallConfirmEnabled(this, false);
+                    SettingsManager.setCallConfirmEnabled(this, false);
                     Toast.makeText(this, R.string.disable_confirm_message, Toast.LENGTH_LONG).show();
                     Toast.makeText(this, R.string.please_recall, Toast.LENGTH_LONG).show();
                     return;
@@ -96,7 +98,7 @@ public class ConfirmActivity extends Activity {
         }
 
         // 指紋認証が不可能な状態なので指紋認証を無効にします
-        MainSettingsFragment.setFingerprintConfirm(this, false);
+        SettingsManager.setFingerprintConfirm(this, false);
         Toast.makeText(this, R.string.not_has_enrolled_fingerprints, Toast.LENGTH_LONG).show();
     }
 
@@ -104,7 +106,7 @@ public class ConfirmActivity extends Activity {
      * 通常の発信確認ダイアログを表示する
      */
     private void showConfirmDialog() {
-        int style = MainSettingsFragment.getIntTheme(this);
+        int style = SettingsManager.getIntTheme(this);
         (new AlertDialog.Builder(new ContextThemeWrapper(this, style)))
                 .setTitle(mNumber)
                 .setCancelable(true)
