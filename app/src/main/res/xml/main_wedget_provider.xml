@@ -5,6 +5,6 @@
                     android:minWidth="72dip"
                     android:scaleType="fitXY"
                     android:resizeMode="horizontal|vertical"
-                    android:previewImage="@mipmap/ic_launcher"
+                    android:previewImage="@drawable/ic_launcher"
                     android:updatePeriodMillis="3600000" >
 </appwidget-provider>

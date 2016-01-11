@@ -110,7 +110,7 @@ public class ConfirmActivity extends Activity {
         (new AlertDialog.Builder(new ContextThemeWrapper(this, style)))
                 .setTitle(mNumber)
                 .setCancelable(true)
-                .setIcon(R.mipmap.ic_launcher)
+                .setIcon(R.drawable.ic_launcher)
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
