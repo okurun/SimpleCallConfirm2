@@ -3,7 +3,6 @@ package com.gmail.okumura.android.simplecallconfirm2.settings;
 
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
-import android.util.Log;
 
 
 public class SettingsActivity extends PreferenceActivity {

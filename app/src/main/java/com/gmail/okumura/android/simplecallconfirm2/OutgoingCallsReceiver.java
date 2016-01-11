@@ -11,9 +11,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
-import android.util.Log;
 
-import com.gmail.okumura.android.simplecallconfirm2.settings.MainSettingsFragment;
 import com.gmail.okumura.android.simplecallconfirm2.settings.SettingsManager;
 
 import java.util.Set;

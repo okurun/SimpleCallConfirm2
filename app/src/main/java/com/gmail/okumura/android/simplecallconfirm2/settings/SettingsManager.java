@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.os.Build;
 import android.preference.PreferenceManager;
 
-import com.gmail.okumura.android.simplecallconfirm2.R;
 import com.gmail.okumura.android.simplecallconfirm2.widget.MainWidgetUpdateReceiver;
 
 import java.util.HashSet;

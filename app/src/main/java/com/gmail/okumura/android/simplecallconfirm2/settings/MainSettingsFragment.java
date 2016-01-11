@@ -14,19 +14,13 @@ import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
-import android.preference.PreferenceManager;
 import android.preference.SwitchPreference;
-import android.util.Log;
 import android.widget.Toast;
 
 import com.gmail.okumura.android.simplecallconfirm2.R;
 import com.gmail.okumura.android.simplecallconfirm2.widget.MainWidgetUpdateReceiver;
 
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
 
 /**
  * Created by naoki on 15/12/27.
