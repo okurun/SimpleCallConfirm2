@@ -17,6 +17,7 @@ import android.preference.PreferenceFragment;
 import android.preference.SwitchPreference;
 import android.widget.Toast;
 
+import com.gmail.okumura.android.simplecallconfirm2.FingerprintDialogFragment;
 import com.gmail.okumura.android.simplecallconfirm2.R;
 import com.gmail.okumura.android.simplecallconfirm2.widget.MainWidgetUpdateReceiver;
 
@@ -349,7 +350,6 @@ public class MainSettingsFragment extends PreferenceFragment implements RefreshD
         final Context context = getActivity().getApplicationContext();
         final SwitchPreference fingerprintConfirmPref =
                 (SwitchPreference) findPreference(SettingsManager.PREF_FINGERPRINT_CONFIRM);
-        fingerprintConfirmPref.setEnabled(false);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             // 端末が指紋認証機能をもっているかチェック
@@ -375,45 +375,27 @@ public class MainSettingsFragment extends PreferenceFragment implements RefreshD
                         } else {
                             // ----- 無効にする -----
                             // 無効にする前に指紋認証する
-//                            try {
-//                                Cipher cipher = Cipher.getInstance("AES");
-//                                byte[] key = new byte[32];
-//                                for (int i = 0; i < 32; i++) {
-//                                    key[i] = 0;
-//                                }
-//                                cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "AES"));
-//                                final FingerprintManager.CryptoObject cryptoObject =
-//                                        new FingerprintManager.CryptoObject(cipher);
-//                                final CancellationSignal signal = new CancellationSignal();
-//                                signal.setOnCancelListener(new CancellationSignal.OnCancelListener() {
-//                                    @Override
-//                                    public void onCancel() {
-//                                    }
-//                                });
-//                                FingerprintManager fingerprintManager =
-//                                        (FingerprintManager) context.getSystemService(Activity.FINGERPRINT_SERVICE);
-//                                if (context.checkSelfPermission(Manifest.permission.USE_FINGERPRINT) != PackageManager.PERMISSION_GRANTED) {
-//                                    return false;
-//                                }
-//                                // TODO ここが動作しない
-//                                fingerprintManager.authenticate(cryptoObject, signal, 0, new FingerprintManager.AuthenticationCallback() {
-//                                    @Override
-//                                    public void onAuthenticationError(int errorCode, CharSequence errString) {
-//                                    }
-//
-//                                    @Override
-//                                    public void onAuthenticationFailed() {
-//                                    }
-//
-//                                    @Override
-//                                    public void onAuthenticationSucceeded(FingerprintManager.AuthenticationResult result) {
-//                                        setFingerprintConfirm(context, false);
-//                                        fingerprintConfirmPref.setEnabled(false);
-//                                    }
-//                                }, new Handler());
-//                            } catch (Exception e) {
-//                                e.printStackTrace();
-//                            }
+                            final FingerprintDialogFragment dialog = new FingerprintDialogFragment();
+                            dialog.setTitle(getString(R.string.disable_fingerprint_dialog_title));
+                            dialog.setMessage(getString(R.string.disable_fingerprint_dialog_message));
+                            dialog.setCallback(new FingerprintManager.AuthenticationCallback() {
+                                @Override
+                                public void onAuthenticationError(int errorCode, CharSequence errString) {
+                                    dialog.dismiss();
+                                }
+
+                                @Override
+                                public void onAuthenticationFailed() {
+                                    dialog.dismiss();
+                                }
+
+                                @Override
+                                public void onAuthenticationSucceeded(FingerprintManager.AuthenticationResult result) {
+                                    fingerprintConfirmPref.setChecked(false);
+                                    dialog.dismiss();
+                                }
+                            });
+                            dialog.show(getFragmentManager(), "fingerPrintDialog");
 
                             return false;
                         }

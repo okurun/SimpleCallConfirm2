@@ -7,9 +7,11 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.hardware.fingerprint.FingerprintManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.Window;
 import android.widget.Toast;
@@ -18,6 +20,7 @@ import com.gmail.okumura.android.simplecallconfirm2.settings.MainSettingsFragmen
 import com.gmail.okumura.android.simplecallconfirm2.settings.SettingsManager;
 
 public class ConfirmActivity extends Activity {
+    private static final String TAG = ConfirmActivity.class.getSimpleName();
     private static final int REQUEST_CODE_REQUEST_CALL_PERMISSION = 1;
 
     private String mNumber = null;
@@ -29,6 +32,8 @@ public class ConfirmActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.i(TAG, "onCreate");
+
         requestWindowFeature(Window.FEATURE_NO_TITLE);
 
         mNumber = getIntent().getStringExtra(Intent.EXTRA_PHONE_NUMBER);
@@ -77,21 +82,31 @@ public class ConfirmActivity extends Activity {
     private void showFingerprintConfirmDialog() {
         if (MainSettingsFragment.hasFingerprintPermissions(this)) {
             if (MainSettingsFragment.hasEnrolledFingerprints(this)) {
-                // TODO ここが動作しない
-//                fingerprintManager.authenticate(null, null, 0, new FingerprintManager.AuthenticationCallback() {
-//                    @Override
-//                    public void onAuthenticationError(int errorCode, CharSequence errString) {
-//                    }
-//
-//                    @Override
-//                    public void onAuthenticationFailed() {
-//                    }
-//
-//                    @Override
-//                    public void onAuthenticationSucceeded(FingerprintManager.AuthenticationResult result) {
-//                        call();
-//                    }
-//                }, new Handler());
+                final FingerprintDialogFragment dialog = new FingerprintDialogFragment();
+                dialog.setTitle(mNumber);
+                dialog.setMessage(getString(R.string.fingerprint_dialog_message));
+                dialog.setEnableFinish(true);
+                dialog.setCallback(new FingerprintManager.AuthenticationCallback() {
+                    @Override
+                    public void onAuthenticationSucceeded(FingerprintManager.AuthenticationResult result) {
+                        Log.i(TAG, "onAuthenticationSucceeded");
+                        call();
+                        dialog.dismiss();
+                    }
+
+                    @Override
+                    public void onAuthenticationError(int errorCode, CharSequence errString) {
+                        Log.i(TAG, "onAuthenticationError");
+                        dialog.dismiss();
+                    }
+
+                    @Override
+                    public void onAuthenticationFailed() {
+                        Log.i(TAG, "onAuthenticationFailed");
+                        dialog.dismiss();
+                    }
+                });
+                dialog.show(getFragmentManager(), "dialog");
 
                 return;
             }
