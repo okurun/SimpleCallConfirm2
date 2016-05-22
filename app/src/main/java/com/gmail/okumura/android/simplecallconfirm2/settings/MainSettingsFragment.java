@@ -375,26 +375,8 @@ public class MainSettingsFragment extends PreferenceFragment implements RefreshD
                         } else {
                             // ----- 無効にする -----
                             // 無効にする前に指紋認証する
-                            final FingerprintDialogFragment dialog = new FingerprintDialogFragment();
-                            dialog.setTitle(getString(R.string.disable_fingerprint_dialog_title));
-                            dialog.setMessage(getString(R.string.disable_fingerprint_dialog_message));
-                            dialog.setCallback(new FingerprintManager.AuthenticationCallback() {
-                                @Override
-                                public void onAuthenticationError(int errorCode, CharSequence errString) {
-                                    dialog.dismiss();
-                                }
-
-                                @Override
-                                public void onAuthenticationFailed() {
-                                    dialog.dismiss();
-                                }
-
-                                @Override
-                                public void onAuthenticationSucceeded(FingerprintManager.AuthenticationResult result) {
-                                    fingerprintConfirmPref.setChecked(false);
-                                    dialog.dismiss();
-                                }
-                            });
+                            final FingerprintDialogFragment dialog =
+                                    getFingerprintDialogFragment(fingerprintConfirmPref);
                             dialog.show(getFragmentManager(), "fingerPrintDialog");
 
                             return false;
@@ -415,6 +397,31 @@ public class MainSettingsFragment extends PreferenceFragment implements RefreshD
         }
     }
 
+    @TargetApi(Build.VERSION_CODES.M)
+    private FingerprintDialogFragment getFingerprintDialogFragment(final SwitchPreference fingerprintConfirmPref) {
+        final FingerprintDialogFragment dialog = new FingerprintDialogFragment();
+        dialog.setTitle(getString(R.string.disable_fingerprint_dialog_title));
+        dialog.setMessage(getString(R.string.disable_fingerprint_dialog_message));
+        dialog.setCallback(new FingerprintManager.AuthenticationCallback() {
+            @Override
+            public void onAuthenticationError(int errorCode, CharSequence errString) {
+                dialog.dismiss();
+            }
+
+            @Override
+            public void onAuthenticationFailed() {
+                dialog.dismiss();
+            }
+
+            @Override
+            public void onAuthenticationSucceeded(FingerprintManager.AuthenticationResult result) {
+                fingerprintConfirmPref.setChecked(false);
+                dialog.dismiss();
+            }
+        });
+
+        return dialog;
+    }
     /**
      * Bluetooth設定を初期化する
      */
