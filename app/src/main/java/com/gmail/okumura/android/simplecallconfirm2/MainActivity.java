@@ -9,9 +9,12 @@ import android.widget.Toast;
 import com.gmail.okumura.android.simplecallconfirm2.settings.MainSettingsFragment;
 import com.gmail.okumura.android.simplecallconfirm2.settings.SettingsActivity;
 import com.gmail.okumura.android.simplecallconfirm2.settings.SettingsManager;
+import com.google.firebase.analytics.FirebaseAnalytics;
 
 public class MainActivity extends Activity {
     private static final int REQUEST_CODE_REQUEST_PERMISSIONS = 1;
+
+    private FirebaseAnalytics mAnalytics = null;
 
     /**
      * onCreate
@@ -22,6 +25,8 @@ public class MainActivity extends Activity {
         setTheme(SettingsManager.getIntTheme(this));
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mAnalytics = FirebaseAnalytics.getInstance(this);
 
         // 発信確認に必要なパーミッションの確認
         if (!MainSettingsFragment.hasCallConfirmPermissions(getApplicationContext())) {

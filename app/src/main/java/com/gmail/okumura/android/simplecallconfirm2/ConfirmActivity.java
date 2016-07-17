@@ -18,12 +18,14 @@ import android.widget.Toast;
 
 import com.gmail.okumura.android.simplecallconfirm2.settings.MainSettingsFragment;
 import com.gmail.okumura.android.simplecallconfirm2.settings.SettingsManager;
+import com.google.firebase.analytics.FirebaseAnalytics;
 
 public class ConfirmActivity extends Activity {
     private static final String TAG = ConfirmActivity.class.getSimpleName();
     private static final int REQUEST_CODE_REQUEST_CALL_PERMISSION = 1;
 
     private String mNumber = null;
+    private FirebaseAnalytics mAnalytics = null;
 
     /**
      * onCreate
@@ -37,6 +39,7 @@ public class ConfirmActivity extends Activity {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
 
         mNumber = getIntent().getStringExtra(Intent.EXTRA_PHONE_NUMBER);
+        mAnalytics = FirebaseAnalytics.getInstance(this);
 
         if (SettingsManager.isFingerprintConfirm(this)) {
             showFingerprintConfirmDialog();

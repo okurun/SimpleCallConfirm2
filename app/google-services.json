@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "860079837697",
+    "firebase_url": "https://simple-call-confirm2.firebaseio.com",
+    "project_id": "simple-call-confirm2",
+    "storage_bucket": "simple-call-confirm2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:860079837697:android:b7a09e88eb35de32",
+        "android_client_info": {
+          "package_name": "com.gmail.okumura.android.simplecallconfirm2"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "860079837697-pksr1subnnb1ngfof0gs2687sgu93n9i.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.gmail.okumura.android.simplecallconfirm2",
+            "certificate_hash": "C4C34D4FD4CEC54F6D828B82FF669048CC8B8CDA"
+          }
+        },
+        {
+          "client_id": "860079837697-rpfe62ubr20tjiho00664o8if9rf6or3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC6gn7d3IoQUTXS_Ya052eqGf4eMC_WdII"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "860079837697-rpfe62ubr20tjiho00664o8if9rf6or3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
